@@ -8,14 +8,24 @@ app = Flask(__name__)
 # ---------------------------
 # ENV CONFIG
 # ---------------------------
-#INFER_DELAY = float(os.getenv("INFER_DELAY", "0.5"))  # seconds
-#MEMORY_MB = int(os.getenv("MEMORY_MB", "0"))  # simulate memory load
-
 try:
     INFER_DELAY = float(os.environ["INFER_DELAY"])
     MEMORY_MB = int(os.environ["MEMORY_MB"])
 except KeyError as e:
     raise RuntimeError(f"Missing required environment variable: {e}")
+
+# ---------------------------
+# MEMORY SIMULATION (ADDED)
+# ---------------------------
+memory_hog = []
+
+def simulate_memory():
+    if MEMORY_MB > 0:
+        for _ in range(MEMORY_MB):
+            memory_hog.append(bytearray(1024 * 1024))  # 1MB chunks
+
+# allocate memory at startup
+simulate_memory()
 
 # ---------------------------
 # PROMETHEUS METRICS
@@ -34,7 +44,6 @@ def healthz():
 
 @app.route("/readyz")
 def readyz():
-    # simple readiness check
     if MEMORY_MB < 0:
         return "not ready", 503
     return "ready", 200
@@ -50,10 +59,8 @@ def predict():
     try:
         data = request.get_json(silent=True) or {}
 
-        # optional per-request override
         delay = float(data.get("delay", INFER_DELAY))
 
-        # simulate failure condition
         if data.get("fail") == True:
             raise Exception("Forced failure triggered")
 

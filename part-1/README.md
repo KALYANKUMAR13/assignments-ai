@@ -59,3 +59,23 @@ Accepts a JSON request with input features and optional `delay`, simulates ML in
 ###### Metrics endpoint:
 
 ![alt text](image-5.png)
+
+##### ENV failed log
+
+We are just passing one env,
+```
+ docker run -p 8080:8080   -e INFER_DELAY=1  inference-service  
+```
+
+![alt text](image-6.png)
+
+##### Setting Memory limit while running Docker Image
+
+This command runs the Docker container, exposes the service on port 8080, sets environment variables for inference delay (0.1s) and memory allocation (200MB), and restricts the container to 100MB RAM with no swap memory, which can trigger an OOM (Out Of Memory) kill if memory usage exceeds the limit.
+
+```
+docker run -p 8080:8080 -e INFER_DELAY=0.1 -e MEMORY_MB=100 -m 100m --memory-swap 100m inference-service
+```
+
+
+![alt text](image-7.png)
