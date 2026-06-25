@@ -1,0 +1,25 @@
+replicaCount: 2
+
+image:
+  repository: docker.io/library/inference-service
+  tag: latest
+
+env:
+  INFER_DELAY: "0.5"
+  MEMORY_MB: "50"
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+service:
+  port: 8080
+
+hpa:
+  minReplicas: 2
+  maxReplicas: 5
+  cpuUtilization: 60

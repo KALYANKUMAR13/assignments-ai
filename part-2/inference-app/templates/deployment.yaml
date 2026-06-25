@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference
+spec:
+  replicas: {{ .Values.replicaCount }}
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      app: inference
+
+  template:
+    metadata:
+      labels:
+        app: inference
+
+    spec:
+      containers:
+        - name: inference
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: INFER_DELAY
+              value: "{{ .Values.env.INFER_DELAY }}"
+            - name: MEMORY_MB
+              value: "{{ .Values.env.MEMORY_MB }}"
+
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
