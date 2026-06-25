@@ -44,6 +44,27 @@ targetCPUUtilizationPercentage: 60
 
 Scaling at 60% leaves 40% headroom so new pods are ready before existing ones saturate. `minReplicas: 2` ensures a single pod failure never causes a full outage.
 
+### Resource Request and Limits:
+#### CPU
+CPU limits are deliberately omitted. CPU is a compressible resource — when a container exceeds its request, the kernel throttles it rather than killing it. This throttling is silent and shows up as p99 latency spikes rather than errors, making it one of the hardest performance problems to diagnose in Kubernetes.
+
+Setting a CPU limit caps burst capacity for no safety gain. The CPU request is what matters — it guarantees the container gets its share of the node and drives the scheduler's placement decisions. We rely on the HPA to scale out under load rather than artificially throttling pods that could otherwise use available CPU.
+
+#### MEMORY
+Memory is non-compressible. A container that exceeds its memory limit is OOMKilled immediately, which is the correct behaviour — a fast restart is better than a pod slowly degrading the node or starving neighbours.
+
+1. **Load testing in staging** — simulate realistic traffic patterns to observe actual CPU and memory consumption under peak load. This gives a measured baseline rather than a guess.
+
+2. **KRR (Kubernetes Resource Recommender)** — run KRR against your cluster after load testing. It analyses historical Prometheus metrics and recommends precise request values per container, removing the guesswork.
+
+3. **VPA (Vertical Pod Autoscaler)**  — VPA can automate resource adjustments but introduces a known problem: it restarts pods to apply new resource values, and pods end up running with different limits at the same time. This makes behaviour inconsistent across replicas and complicates debugging. For this reason VPA is useful in recommendation mode (updateMode: Off) alongside KRR, but not in auto mode for a latency-sensitive inference service.
+
+### PodDisruptionBudget
+**PodDisruptionBudget** is a built-in Kubernetes resource — no extra install needed.
+It tells Kubernetes to always keep at least 1 pod running for the `inference` app
+during voluntary disruptions such as node drains, cluster upgrades, or 
+`kubectl delete pod`.
+
 
 ![alt text](image.png)
 
