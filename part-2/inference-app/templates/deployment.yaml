@@ -33,6 +33,8 @@ spec:
               value: "{{ .Values.env.INFER_DELAY }}"
             - name: MEMORY_MB
               value: "{{ .Values.env.MEMORY_MB }}"
+            - name: FORCE_FAIL
+              value: "{{ .Values.env.FORCE_FAIL }}"
 
           resources:
             requests:

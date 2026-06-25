@@ -8,6 +8,8 @@ app = Flask(__name__)
 # ---------------------------
 # ENV CONFIG
 # ---------------------------
+FORCE_FAIL = os.environ.get("FORCE_FAIL", "false").lower() == "true"
+
 try:
     INFER_DELAY = float(os.environ["INFER_DELAY"])
     MEMORY_MB = int(os.environ["MEMORY_MB"])
@@ -40,6 +42,8 @@ ERROR_COUNT = Counter("error_total", "Total errors")
 # ---------------------------
 @app.route("/healthz")
 def healthz():
+    if FORCE_FAIL:
+        return "unhealthy", 503
     return "ok", 200
 
 @app.route("/readyz")
