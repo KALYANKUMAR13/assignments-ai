@@ -1,7 +1,5 @@
 import os
 import time
-import json
-import threading
 from flask import Flask, request, jsonify, Response
 from prometheus_client import Counter, Histogram, Gauge, generate_latest
 
@@ -10,8 +8,14 @@ app = Flask(__name__)
 # ---------------------------
 # ENV CONFIG
 # ---------------------------
-INFER_DELAY = float(os.getenv("INFER_DELAY", "0.5"))  # seconds
-MEMORY_MB = int(os.getenv("MEMORY_MB", "0"))  # simulate memory load
+#INFER_DELAY = float(os.getenv("INFER_DELAY", "0.5"))  # seconds
+#MEMORY_MB = int(os.getenv("MEMORY_MB", "0"))  # simulate memory load
+
+try:
+    INFER_DELAY = float(os.environ["INFER_DELAY"])
+    MEMORY_MB = int(os.environ["MEMORY_MB"])
+except KeyError as e:
+    raise RuntimeError(f"Missing required environment variable: {e}")
 
 # ---------------------------
 # PROMETHEUS METRICS
@@ -20,20 +24,6 @@ REQUEST_COUNT = Counter("requests_total", "Total requests", ["endpoint", "status
 REQUEST_LATENCY = Histogram("request_latency_seconds", "Latency histogram", ["endpoint"])
 IN_FLIGHT = Gauge("inflight_requests", "In-flight requests")
 ERROR_COUNT = Counter("error_total", "Total errors")
-
-# ---------------------------
-# MEMORY SIMULATION
-# ---------------------------
-memory_hog = []
-
-def simulate_memory():
-    if MEMORY_MB > 0:
-        # allocate ~1MB chunks
-        for _ in range(MEMORY_MB):
-            memory_hog.append(bytearray(1024 * 1024))
-
-# run once at startup
-simulate_memory()
 
 # ---------------------------
 # HEALTH ENDPOINTS
