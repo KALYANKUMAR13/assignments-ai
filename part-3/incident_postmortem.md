@@ -1,17 +1,24 @@
-# Incident Postmortem(Sample)
+## Incident Postmortem(Sample)
 
-## Trigger
+### Trigger
 
 Prometheus alerts were triggered due to elevated latency and increased error rate in the `/predict` endpoint (HighP99Latency and HighErrorRate).
 
-## Impact
+### Impact
 
 Increased latency in `/predict/id` caused customers to experience long wait times while logging into the site. Additionally, another microservice, which depends on this endpoint, became unavailable, resulting in a downstream service disruption.
 
-## Resolution
+### Resolution
 
 The issue was traced to simulated latency and forced failures in the `/predict` endpoint. The load conditions were removed, and services returned to normal behavior after stabilization.
 
-## Prevention
+### Prevention
 
 Introduce controlled performance testing, improve dependency resilience between microservices, and integrate Alertmanager with Slack for real-time incident visibility in cloud environments.
+
+
+## What I’d do with more time
+
+I am not experienced with Kustomize, but I have researched it and understand that it is a Kubernetes **configuration management tool**. Many organizations use a combination of Helm and Kustomize to manage and deliver applications across different environments.
+
+I would also explore a proof of concept (PoC) with tools like **Goldilocks**, which help automatically recommend CPU and memory requests/limits for Kubernetes workloads. This would help improve resource tuning, reduce over-provisioning, and make alerting and scaling more effective.
